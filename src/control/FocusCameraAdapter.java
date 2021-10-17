@@ -1,8 +1,7 @@
 package control;
 
-import javafx.beans.property.DoubleProperty;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Point3D;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
@@ -11,81 +10,80 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 
 public class FocusCameraAdapter {
-  private static final double MAX_DISTANCE = 800;
-  private static final double MIN_DISTANCE = 100;
-  private static final double DEFAULT_DISTANCE = 400;
-  private static final double ZOOM_MULTIPLIER = -0.8;
+  private static final double FAREST_DISTANCE = -800;
+  private static final double NEAREST_DISTANCE = -100;
+  private static final double DEFAULT_DISTANCE = -400;
+  private static final double SCROLL_MULTIPLIER = -0.8;
   private static final double DRAG_MULTIPLIER = 0.1;
   private static final double MAX_ELEVATION = 30;
   private static final double MIN_ELEVATION = -50;
   private static final double DEFAULT_ELEVATION = -20;
 
-  private double distance = 0;
-  private final DoubleProperty elevation = new SimpleDoubleProperty(0.0);
-  private final DoubleProperty direction = new SimpleDoubleProperty(0.0);
-  private final Translate translate = new Translate();
-  private final Rotate rotateElevation = new Rotate();
-  private final Rotate rotateDirection = new Rotate(0, Rotate.Y_AXIS);
+  private final Translate distance = new Translate();
+  private final Rotate elevation = new Rotate();
+  private final Rotate direction = new Rotate(0, Rotate.Y_AXIS);
 
-  public FocusCameraAdapter(Node camera, Node target) {
+  private FocusCameraAdapter() {
+    elevation.axisProperty()
+             .bind(Bindings.createObjectBinding(this::calcRotateAxis, direction.angleProperty()));
+  }
+
+  public static FocusCameraAdapter of(Node camera, Node target) {
+    FocusCameraAdapter o = new FocusCameraAdapter();
     camera.translateXProperty().bind(target.translateXProperty());
     camera.translateYProperty().bind(target.translateYProperty());
     camera.translateZProperty().bind(target.translateZProperty());
-    rotateElevation.angleProperty().bind(elevation);
-    rotateDirection.angleProperty().bind(direction);
-    camera.getTransforms().addAll(rotateElevation, rotateDirection, translate);
-    reset();
+    camera.getTransforms().addAll(o.elevation, o.direction, o.distance);
+    o.reset();
+    return o;
+  }
+
+  public Point3D calcRotateAxis() {
+    double radian = Math.toRadians(direction.angleProperty().get() + 90);
+    return new Point3D(Math.sin(radian), 0, Math.cos(radian));
+  }
+
+  public ReadOnlyDoubleProperty getElevation() {
+    return elevation.angleProperty();
   }
 
   public ReadOnlyDoubleProperty getDirection() {
-    return direction;
-  }
-
-  public void zoom(double v) {
-    distance += v;
-    distance = Math.min(MAX_DISTANCE, Math.max(MIN_DISTANCE, distance));
-    translate.setZ(-distance);
-  }
-
-  public void updateViewport() {
-    double radian = Math.toRadians(direction.get());
-    double unitX = Math.sin(radian);
-    double unitZ = Math.cos(radian);
-    rotateElevation.setAxis(new Point3D(unitZ, 0, -unitX));
+    return direction.angleProperty();
   }
 
   public void reset() {
-    distance = DEFAULT_DISTANCE;
-    this.zoom(0.0);
-    elevation.set(DEFAULT_ELEVATION);
-    direction.set(0.0);
-    this.updateViewport();
+    distance.setZ(DEFAULT_DISTANCE);
+    elevation.angleProperty().set(DEFAULT_ELEVATION);
+    direction.angleProperty().set(0.0);
   }
 
-  private double dragStartX = 0.0;
-  private double dragStartY = 0.0;
-  private double dragStartElevation = 0.0;
-  private double dragStartDirection = 0.0;
+  private double anchorX = 0.0;
+  private double anchorY = 0.0;
+  private double anchorElevation = 0.0;
+  private double anchorDirection = 0.0;
 
   public void handlePressed(MouseEvent event) {
-    dragStartX = event.getScreenX();
-    dragStartY = event.getScreenY();
-    dragStartElevation = elevation.get();
-    dragStartDirection = direction.get();
+    anchorX = event.getScreenX();
+    anchorY = event.getScreenY();
+    anchorElevation = elevation.angleProperty().get();
+    anchorDirection = direction.angleProperty().get();
   }
 
   public void handleDragged(MouseEvent event) {
-    double deltaX = event.getScreenX() - dragStartX;
-    double deltaY = event.getScreenY() - dragStartY;
-    direction.set(dragStartDirection + deltaX * DRAG_MULTIPLIER);
-    double temp = dragStartElevation - deltaY * DRAG_MULTIPLIER;
-    temp = Math.max(MIN_ELEVATION, Math.min(MAX_ELEVATION, temp));
-    elevation.set(temp);
-    updateViewport();
+    double deltaX = event.getScreenX() - anchorX;
+    double newDirection = anchorDirection + deltaX * DRAG_MULTIPLIER;
+    direction.angleProperty().set(newDirection);
+
+    double deltaY = event.getScreenY() - anchorY;
+    double newElevation = anchorElevation - deltaY * DRAG_MULTIPLIER;
+    newElevation = Math.max(MIN_ELEVATION, Math.min(MAX_ELEVATION, newElevation));
+    elevation.angleProperty().set(newElevation);
   }
 
   public void handleScroll(ScrollEvent event) {
-    zoom(event.getDeltaY() * ZOOM_MULTIPLIER);
+    double newDistance = distance.getZ() - event.getDeltaY() * SCROLL_MULTIPLIER;
+    newDistance = Math.max(FAREST_DISTANCE, Math.min(NEAREST_DISTANCE, newDistance));
+    distance.setZ(newDistance);
   }
 
 }
