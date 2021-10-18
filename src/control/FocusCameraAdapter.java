@@ -9,14 +9,16 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 
+import util.Misc;
+
 public class FocusCameraAdapter {
-  private static final double FAREST_DISTANCE = -800;
-  private static final double NEAREST_DISTANCE = -100;
-  private static final double DEFAULT_DISTANCE = -400;
+  private static final double FAREST_DISTANCE = -600;
+  private static final double NEAREST_DISTANCE = -50;
+  private static final double DEFAULT_DISTANCE = -200;
   private static final double SCROLL_MULTIPLIER = -0.8;
   private static final double DRAG_MULTIPLIER = 0.1;
   private static final double MAX_ELEVATION = 30;
-  private static final double MIN_ELEVATION = -50;
+  private static final double MIN_ELEVATION = -40;
   private static final double DEFAULT_ELEVATION = -20;
 
   private final Translate distance = new Translate();
@@ -72,6 +74,7 @@ public class FocusCameraAdapter {
   public void handleDragged(MouseEvent event) {
     double deltaX = event.getScreenX() - anchorX;
     double newDirection = anchorDirection + deltaX * DRAG_MULTIPLIER;
+    newDirection = Misc.normalizeDegree(newDirection);
     direction.angleProperty().set(newDirection);
 
     double deltaY = event.getScreenY() - anchorY;
