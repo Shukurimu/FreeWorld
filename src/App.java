@@ -1,6 +1,4 @@
-
-import java.io.FileInputStream;
-import java.nio.file.Path;
+import java.lang.System.Logger;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -10,7 +8,6 @@ import javafx.geometry.HPos;
 import javafx.scene.Camera;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -28,17 +25,19 @@ import control.FocusCameraAdapter;
 import control.KeyboardInput;
 import control.KeyboardManager;
 import scene.FreeSpace;
+import util.ResourceManager;
 
 public class App extends Application {
+  private static final Logger logger = System.getLogger("");
   private ScheduledThreadPoolExecutor executor = null;
-  private Image mainImage = null;
 
   @Override
   public void init() throws Exception {
-    System.out.printf("init(): %s%n", javafx.application.Platform.isFxApplicationThread());
+    logger.log(Logger.Level.INFO, javafx.application.Platform.isFxApplicationThread());
     executor = new ScheduledThreadPoolExecutor(1);
-    String filePath = Path.of("res", "doge.jpg").toAbsolutePath().toString();
-    mainImage = new Image(new FileInputStream(filePath));
+    ResourceManager.loadImage("doge", "doge.jpg");
+    ResourceManager.loadImage("cattle", "cattle.jpeg");
+    ResourceManager.loadImage("owl", "owl.jpg");
   }
 
   private Text createText(String format, Object o) {
@@ -54,8 +53,9 @@ public class App extends Application {
   public void start(Stage primaryStage) throws Exception {
 
     PhongMaterial material = new PhongMaterial();
-    material.setDiffuseMap(mainImage);
+    material.setDiffuseMap(ResourceManager.getImage("owl"));
     Sphere mainCharacter = new Sphere(10);
+    mainCharacter.setTranslateY(-10);
     mainCharacter.setMaterial(material);
     mainCharacter.setRotationAxis(Rotate.Y_AXIS);
 

@@ -12,12 +12,12 @@ import javafx.scene.transform.Translate;
 import util.Misc;
 
 public class FocusCameraAdapter {
-  private static final double FAREST_DISTANCE = -600;
+  private static final double FAREST_DISTANCE = -400;
   private static final double NEAREST_DISTANCE = -50;
   private static final double DEFAULT_DISTANCE = -200;
   private static final double SCROLL_MULTIPLIER = -0.8;
   private static final double DRAG_MULTIPLIER = 0.1;
-  private static final double MAX_ELEVATION = 30;
+  private static final double MAX_ELEVATION = 0;
   private static final double MIN_ELEVATION = -40;
   private static final double DEFAULT_ELEVATION = -20;
 
