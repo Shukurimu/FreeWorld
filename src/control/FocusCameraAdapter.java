@@ -9,6 +9,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 
+import node.Physical;
 import util.Misc;
 
 public class FocusCameraAdapter {
@@ -30,11 +31,12 @@ public class FocusCameraAdapter {
              .bind(Bindings.createObjectBinding(this::calcRotateAxis, direction.angleProperty()));
   }
 
-  public static FocusCameraAdapter of(Node camera, Node target) {
+  public static FocusCameraAdapter of(Node camera, Physical target) {
     FocusCameraAdapter o = new FocusCameraAdapter();
-    camera.translateXProperty().bind(target.translateXProperty());
-    camera.translateYProperty().bind(target.translateYProperty());
-    camera.translateZProperty().bind(target.translateZProperty());
+    Node fxNode = target.getFxNode();
+    camera.translateXProperty().bind(fxNode.translateXProperty());
+    camera.translateYProperty().bind(fxNode.translateYProperty());
+    camera.translateZProperty().bind(fxNode.translateZProperty());
     camera.getTransforms().addAll(o.elevation, o.direction, o.distance);
     o.reset();
     return o;

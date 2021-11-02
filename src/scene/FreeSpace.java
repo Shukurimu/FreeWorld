@@ -1,17 +1,17 @@
 package scene;
 
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.SceneAntialiasing;
 import javafx.scene.SubScene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
-import javafx.scene.shape.Cylinder;
+import javafx.scene.shape.Box;
+import javafx.scene.shape.DrawMode;
 import javafx.scene.transform.Rotate;
-import javafx.scene.transform.Translate;
 
+import node.Physical;
 import util.ResourceManager;
 
 public class FreeSpace extends SubScene {
@@ -25,8 +25,8 @@ public class FreeSpace extends SubScene {
     setFill(Color.SILVER);
   }
 
-  public void addChild(Node child) {
-    parent.getChildren().add(child);
+  public void add(Physical node) {
+    parent.getChildren().add(node.getFxNode());
   }
 
   private static ImageView initImageView(Image image) {
@@ -39,42 +39,17 @@ public class FreeSpace extends SubScene {
   }
 
   public static FreeSpace create(double width, double height) {
-    Cylinder yAxis = new Cylinder(1, RANGE);
-    yAxis.setMaterial(new PhongMaterial(Color.BLUE));
-
-    Cylinder xAxis = new Cylinder(1, RANGE);
-    xAxis.setMaterial(new PhongMaterial(Color.RED));
-    xAxis.setRotate(90);
-    xAxis.setRotationAxis(Rotate.Z_AXIS);
-
-    Cylinder zAxis = new Cylinder(1, RANGE);
-    zAxis.setMaterial(new PhongMaterial(Color.GREEN));
-    zAxis.setRotate(90);
-    zAxis.setRotationAxis(Rotate.X_AXIS);
+    Box box = new Box(RANGE, RANGE, RANGE);
+    box.setDrawMode(DrawMode.LINE);
+    box.setMaterial(new PhongMaterial(Color.RED));
+    box.setTranslateY(-HALF_MID);
 
     Image floorImage = ResourceManager.getImage("doge");
     ImageView floor = initImageView(floorImage);
     floor.setRotationAxis(Rotate.X_AXIS);
     floor.setRotate(-90);
 
-    Translate move = new Translate(0, -HALF_MID, HALF_MID);
-    Image wallImage = ResourceManager.getImage("cattle");
-    ImageView wallN = initImageView(wallImage);
-    wallN.getTransforms().addAll(move);
-    ImageView wallS = initImageView(wallImage);
-    wallS.setRotationAxis(Rotate.Y_AXIS);
-    wallS.setRotate(90);
-    wallS.getTransforms().addAll(move);
-    ImageView wallE = initImageView(wallImage);
-    wallE.setRotationAxis(Rotate.Y_AXIS);
-    wallE.setRotate(180);
-    wallE.getTransforms().addAll(move);
-    ImageView wallW = initImageView(wallImage);
-    wallW.setRotationAxis(Rotate.Y_AXIS);
-    wallW.setRotate(270);
-    wallW.getTransforms().addAll(move);
-
-    Group parent = new Group( xAxis, yAxis, zAxis, floor, wallN, wallS, wallE, wallW);
+    Group parent = new Group(box, floor);
     parent.setAutoSizeChildren(false);
     return new FreeSpace(parent, width, height);
   }
